@@ -7,6 +7,10 @@ class State(Enum):
     AWAITING_MESSAGE = auto()
     MESSAGE_IDENTIFIED = auto()
     REPORT_COMPLETE = auto()
+    IDENTIFY_TARGET = auto()
+    HARASS_TYPE = auto()
+    OFFENSIVE_CONTENT_TYPE = auto()
+    EMERGENCY = auto()
 
 class Report:
     START_KEYWORD = "report"
@@ -24,7 +28,6 @@ class Report:
         prompts to offer at each of those states. You're welcome to change anything you want; this skeleton is just here to
         get you started and give you a model for working with Discord. 
         '''
-
         if message.content == self.CANCEL_KEYWORD:
             self.state = State.REPORT_COMPLETE
             return ["Report cancelled."]
@@ -56,12 +59,42 @@ class Report:
             # Here we've found the message - it's up to you to decide what to do next!
             self.state = State.MESSAGE_IDENTIFIED
             return ["I found this message:", "```" + message.author.name + ": " + message.content + "```", \
-                    "This is all I know how to do right now - it's up to you to build out the rest of my reporting flow!"]
+                    "Please select a category of abuse (enter number): \n(1) Spam/Fraud\n (2) General Offensive Content\n (3) Bullying/Harassment\n (4) Imminent Danger"]
         
         if self.state == State.MESSAGE_IDENTIFIED:
-            return ["<insert rest of reporting flow here>"]
+            if re.search('3', message.content):
+                self.state = State.IDENTIFY_TARGET
+                return ["Who was this abuse target at?\n 'Me' or Other? (if other, please specify username)"]
+            self.state == State.REPORT_COMPLETE
+            return ["Separate flow."]
 
-        return []
+        if self.state == State.IDENTIFY_TARGET:
+            reply = "Please select the type of bullying/harassment (enter number): \n"
+            reply += " (1) Credible threats to safety \n (2) Targeted Offensive Content \n (3) Encouragement of self-harm \n (4) Exortion (sexual or otherwise)"
+            self.state = State.HARASS_TYPE
+            return [reply]
+        
+        if self.state == State.HARASS_TYPE:
+            if re.search('2', message.content):
+                reply = "Please select type of offensive content: \n"
+                reply += '(1) Dehumanizing/derogatory remarks \n (2) Unsolicited Sexual Content \n (3) Violent Content \n (4) Targeted Hate Speech'
+                self.state = State.OFFENSIVE_CONTENT_TYPE
+                return [reply]
+            self.state = State.EMERGENCY
+            reply = "Thank you for reporting. Our content moderators will review the messages and decide on appropriate action. Please reach out to 911 if this is an emergency. Help is available at 988 (Suicide and Crisis Lifeline)."
+            reply += "What further action would you like to pursue? (select all that apply) \n"
+            reply += "(1) Block user \n (2) Report to authorities"
+            return [reply]
+        
+        if self.state == State.EMERGENCY:
+            self.state = State.REPORT_COMPLETE
+            if re.search('1', message.content):
+                return ['Reported to authorities.']
+            else:
+                return ['User blocked.']
+
+        if self.state == State.REPORT_COMPLETE:
+            return ["Report filed. Thank you for your time."]
 
     def report_complete(self):
         return self.state == State.REPORT_COMPLETE
