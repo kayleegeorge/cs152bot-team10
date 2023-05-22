@@ -70,7 +70,7 @@ class Report:
 
         if self.state == State.IDENTIFY_TARGET:
             reply = "Please select the type of bullying/harassment (enter number): \n"
-            reply += " (1) Credible threats to safety \n (2) Targeted Offensive Content \n (3) Encouragement of self-harm \n (4) Exortion (sexual or otherwise)"
+            reply += " (1) Credible threats to safety \n (2) Targeted Offensive Content \n (3) Encouragement of self-harm \n (4) Extortion (sexual or otherwise)"
             self.state = State.HARASS_TYPE
             return [reply]
         
