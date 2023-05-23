@@ -18,6 +18,7 @@ class Report:
     HELP_KEYWORD = "help"
 
     def __init__(self, client):
+        self.data = {}
         self.state = State.REPORT_START
         self.client = client
         self.message = None
@@ -58,6 +59,7 @@ class Report:
 
             # Here we've found the message - it's up to you to decide what to do next!
             self.state = State.MESSAGE_IDENTIFIED
+            self.data['message'] = message
             return ["I found this message:", "```" + message.author.name + ": " + message.content + "```", \
                     "Please select a category of abuse (enter number): \n(1) Spam/Fraud\n (2) General Offensive Content\n (3) Bullying/Harassment\n (4) Imminent Danger"]
         
@@ -65,11 +67,17 @@ class Report:
             if re.search('3', message.content):
                 self.state = State.IDENTIFY_TARGET
                 return ["Who was this abuse target at?\n 'Me' or Other? (if other, please specify username)"]
-            self.state == State.REPORT_COMPLETE
+            self.state = State.REPORT_COMPLETE
             return ["Separate flow."]
 
         if self.state == State.IDENTIFY_TARGET:
-            reply = "Please select the type of bullying/harassment (enter number): \n"
+            if message.content == 'Me':
+                self.data['target'] = message.author.name
+            else:
+                self.data['target'] = message.content
+                
+            reply = 'Target identified: ' + self.data['target'] + '\n' #TODO validate user in the case where target is other
+            reply += "Please select the type of bullying/harassment (enter number): \n"
             reply += " (1) Credible threats to safety \n (2) Targeted Offensive Content \n (3) Encouragement of self-harm \n (4) Extortion (sexual or otherwise)"
             self.state = State.HARASS_TYPE
             return [reply]
@@ -79,19 +87,32 @@ class Report:
                 reply = "Please select type of offensive content: \n"
                 reply += '(1) Dehumanizing/derogatory remarks \n (2) Unsolicited Sexual Content \n (3) Violent Content \n (4) Targeted Hate Speech'
                 self.state = State.OFFENSIVE_CONTENT_TYPE
+                self.data['emergency'] = False
                 return [reply]
             self.state = State.EMERGENCY
+            self.data['emergency'] = True
             reply = "Thank you for reporting. Our content moderators will review the messages and decide on appropriate action. Please reach out to 911 if this is an emergency. Help is available at 988 (Suicide and Crisis Lifeline)."
             reply += "What further action would you like to pursue? (select all that apply) \n"
             reply += "(1) Block user \n (2) Report to authorities"
             return [reply]
         
+        if self.state == State.OFFENSIVE_CONTENT_TYPE:
+            if re.search('1', message.content):
+                self.data['offensiveType'] = 'Dehumanizing/derogatory remarks'
+            elif re.search('2', message.content):
+                self.data['offensiveType'] = 'Unsolicited Sexual Content'
+            elif re.search('3', message.content):
+                self.data['offensiveType'] = 'Violent Content'
+            elif re.search('4', message.content):
+                self.data['offensiveType'] = 'Targeted Hate Speech'
+            self.state = State.REPORT_COMPLETE
+    
         if self.state == State.EMERGENCY:
             self.state = State.REPORT_COMPLETE
             if re.search('1', message.content):
-                return ['Reported to authorities.']
-            else:
                 return ['User blocked.']
+            else:
+                return ['Reported to authorities.']
 
         if self.state == State.REPORT_COMPLETE:
             return ["Report filed. Thank you for your time."]
