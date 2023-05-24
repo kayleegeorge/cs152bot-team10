@@ -7,6 +7,7 @@ import logging
 import re
 import requests
 from report import Report
+from review import Review
 import pdb
 
 # Set up logging to the console
@@ -34,6 +35,8 @@ class ModBot(discord.Client):
         self.group_num = None
         self.mod_channels = {} # Map from guild to the mod channel id for that guild
         self.reports = {} # Map from user IDs to the state of their report
+        self.reviews = {}
+
 
     async def on_ready(self):
         print(f'{self.user.name} has connected to Discord! It is these guilds:')
@@ -131,12 +134,15 @@ class ModBot(discord.Client):
             await message.channel.send(r)
 
 
-        # If the report is complete or cancelled, remove it from our map
+        # If the report is complete or cancelled, remove it from our map and process it
         if self.reports[author_id].report_complete():
             report = self.reports.pop(author_id)
             # Forward the message to the mod channel
             mod_channel = self.mod_channels[message.guild.id]
-            await mod_channel.send(f'Forwarded message:\n{message.author.name}: "{report.data}"')
+            self.reviewing = True
+            await mod_channel.send(f'Report filed:\n{message.author.name}: "{report.data}"')
+            message.content = 'REPORT_START'
+            await self.handle_mod_message(message)
 
         # # Forward the message to the mod channel
         # mod_channel = self.mod_channels[message.guild.id]
@@ -145,7 +151,29 @@ class ModBot(discord.Client):
         # await mod_channel.send(self.code_format(scores))
 
     async def handle_mod_message(self, message):
-        print('received message:', message)
+        # if not self.reviewing:
+        #     return
+        mod_channel = self.mod_channels[message.guild.id]
+
+        author_id = message.author.id
+        responses = []
+
+        if message.content == 'REPORT_START':
+        # If we don't currently have an active report for this user, add one
+            self.reviews[author_id] = Review(self)
+
+        # Only respond to messages if they're part of a reporting flow
+        if author_id not in self.reviews:
+            return
+        # Let the report class handle this message; forward all the messages it returns to uss
+        responses = await self.reviews[author_id].handle_message(message)
+
+        for r in responses:
+            await mod_channel.send(r)
+
+        if self.reviews[author_id].review_complete():
+            review = self.reviews.pop(author_id)
+            self.reviewing = False
     
     def eval_text(self, message):
         ''''
