@@ -18,6 +18,8 @@ class State(Enum):
     BAN = auto()
     ANY_SIGNS = auto()
     PROTECTED = auto()
+    ADVERSARIAL = auto()
+    WARNING = auto()
 
 class Review:
     START_KEYWORD = "report"
@@ -94,7 +96,7 @@ class Review:
                 reply += 'Protected topics include: race, color, religion, sex, age, disability, national origin'
                 return [reply] 
             if re.search('N',message.content):
-                self.state = State.REVIEW_COMPLETE
+                self.state = State.ADVERSARIAL
                 return ["No action. We may record the reporter for potential adversarial reporting."]
             return ["Try again."]
         
@@ -106,7 +108,7 @@ class Review:
                 reply += 'Does the severity of this message warrant escalation? (Y/N)'
                 return [reply] 
             if re.search('N',message.content):
-                self.state = State.REVIEW_COMPLETE
+                self.state = State.WARNING
                 reply = 'This message will be internally classified as bullying.\n'
                 reply += 'We will send the user a warning about this behavior and record this incident onto their account.' #TODO do this too
                 return[reply]         
@@ -137,10 +139,16 @@ class Review:
             return ["Review filed. Thank you for your time."]
 
     def review_complete(self):
-        return self.state == State.REVIEW_COMPLETE or self.state == State.COMPLETE_DANGER
+        return self.state == State.REVIEW_COMPLETE or self.state == State.COMPLETE_DANGER or self.state == State.ADVERSARIAL or self.state == State.WARNING
     
+    def adversarial(self):
+        return self.state == State.ADVERSARIAL
+
     def complete_danger(self):
         return self.state == State.COMPLETE_DANGER
+    
+    def warning(self):
+        return self.state == State.WARNING
     
     def banned(self):
         return self.state == State.BAN

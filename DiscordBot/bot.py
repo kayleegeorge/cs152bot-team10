@@ -41,8 +41,6 @@ class ModBot(discord.Client):
         self.adversary_counts = collections.defaultdict(int)
         self.warnings = collections.defaultdict(int)
 
-
-
     async def on_ready(self):
         print(f'{self.user.name} has connected to Discord! It is these guilds:')
         for guild in self.guilds:
@@ -177,8 +175,9 @@ class ModBot(discord.Client):
         mod_channel = self.mod_channels[message.guild.id]
 
         author_id = message.author.id
-        print('AUTHOR ID: ', author_id)
-        print('AUTHOR NAME: ', message.author.name)
+        author_name = message.author.name
+        # print('AUTHOR ID: ', author_id)
+        # print('AUTHOR NAME: ', author_name)
         responses = []
 
         if message.content == 'REPORT_START':
@@ -195,8 +194,17 @@ class ModBot(discord.Client):
             await mod_channel.send(r)
         if self.reviews[author_id].banned() or self.reviews[author_id].complete_danger():
             abuser = self.reports[author_id].get_abuser()
-            print('WE SHOULD BAN: ', abuser)
+            # print('WE SHOULD BAN: ', abuser)
             self.banned.add(abuser)
+
+        if self.reviews[author_id].adversarial():
+            # print('THIS AUTHOR IS ADVERSARIAL: ', author_id)
+            self.adversary_counts[author_id] += 1
+            # print("NEW MAPPY: ", self.adversary_counts)
+
+        if self.reviews[author_id].warning():
+            abuser = self.reports[author_id].get_abuser()
+            self.warnings[abuser] += 1
 
         if self.reviews[author_id].review_complete():
             self.reports.pop(author_id)
