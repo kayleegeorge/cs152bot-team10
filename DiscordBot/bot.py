@@ -150,11 +150,18 @@ class ModBot(discord.Client):
 
         # If the report is complete or cancelled, remove it from our map and process it
         if self.reports[author_id].report_complete():
+            if self.reports[author_id].cancel_or_separate():
+                self.reports.pop(author_id)
+                return
             report = self.reports[author_id]
             # Forward the message to the mod channel
             mod_channel = self.mod_channels[message.guild.id]
             self.reviewing = True
-            await mod_channel.send(f'Report filed:\n{message.author.name}: "{report.data}"')
+            # await mod_channel.send(f'Report filed:\n{message.author.name}: "{report.data}"')
+            await mod_channel.send('Report filed!')
+            await mod_channel.send(f'Abuser:\n{report.get_abuser()}')
+            await mod_channel.send(f'Abusive Message:\n{report.get_abusive_message()}')
+            await mod_channel.send(f'Report Data:\n{report.get_data()}')
             message.content = 'REPORT_START'
             await self.handle_mod_message(message)
 

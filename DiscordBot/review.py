@@ -37,9 +37,8 @@ class Review:
             return ["Review cancelled."]
         
         if self.state == State.REVIEW_START:
-            reply =  "Thank you for starting the manual review process.\n"
+            reply =  "Thank you for starting the manual review process. (Enter 'cancel' any time to cancel the review and discard the report.)\n"
             self.state = State.ABUSE_TYPE
-
             reply += "Please select a category of abuse (enter number): \n(1) Harassment/Bullying\n(2) Imminent Danger\n(3) Other"
             return [reply]
         

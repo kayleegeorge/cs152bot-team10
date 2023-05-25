@@ -12,6 +12,7 @@ class State(Enum):
     OFFENSIVE_CONTENT_TYPE = auto()
     EMERGENCY = auto()
     DANGER = auto()
+    CANCEL_OR_SEPARATE = auto()
 
 class Report:
     START_KEYWORD = "report"
@@ -24,6 +25,7 @@ class Report:
         self.client = client
         self.message = None
         self.abuser = None
+        self.abusive_message = None
     
     async def handle_message(self, message):
         '''
@@ -32,7 +34,7 @@ class Report:
         get you started and give you a model for working with Discord. 
         '''
         if message.content == self.CANCEL_KEYWORD:
-            self.state = State.REPORT_COMPLETE
+            self.state = State.CANCEL_OR_SEPARATE
             return ["Report cancelled."]
         
         if self.state == State.REPORT_START:
@@ -61,8 +63,9 @@ class Report:
 
             # Here we've found the message - it's up to you to decide what to do next!
             self.state = State.MESSAGE_IDENTIFIED
-            self.data['message'] = message
+            # self.data['message'] = message
             self.abuser = message.author.name
+            self.abusive_message = message.content
             return ["I found this message:", "```" + message.author.name + ": " + message.content + "```", \
                     "Please select a category of abuse (enter number): \n(1) Spam/Fraud\n (2) General Offensive Content\n (3) Bullying/Harassment\n (4) Imminent Danger"]
         
@@ -73,7 +76,7 @@ class Report:
             if re.search('4', message.content):
                 self.state = State.DANGER
                 return ["Please specify the type of danger: \n(1) Credible threats to safety\n(2) Encouragement of self-harm"]
-            self.state = State.REPORT_COMPLETE
+            self.state = State.CANCEL_OR_SEPARATE
             return ["Separate flow."]
         
         if self.state == State.DANGER:
@@ -136,11 +139,19 @@ class Report:
             return ["Report filed. Thank you for your time."]
 
     def report_complete(self):
-        return self.state == State.REPORT_COMPLETE
+        return self.state == State.REPORT_COMPLETE or self.state == State.CANCEL_OR_SEPARATE
     
+    def cancel_or_separate(self):
+        return self.state == State.CANCEL_OR_SEPARATE
+
     def get_abuser(self):
         return self.abuser
 
+    def get_abusive_message(self):
+        return self.abusive_message
+    
+    def get_data(self):
+        return self.data
 
     
 
