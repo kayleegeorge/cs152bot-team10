@@ -58,33 +58,40 @@ class Review:
                 return ["First offense in general? Answer Y or N."]
             if re.search('N',message.content):
                 self.state = State.TRUSTWORTHY
-                return ["Is the user being reported by trustworthy reporters?"]
+                reply = "Is the user being reported by trustworthy reporters? (Y/N)\n"
+                reply += "Trustworthy reporters are users whose percentage of false reports (i.e. reports that did not result in any action after manual review) is under 10%."
+                return [reply]
             return ["Try again."]
         
         if self.state == State.PROMPT_IN_GENERAL:
             if re.search('Y', message.content):
                 self.state = State.ZERO_TOLERANCE
-                return ["Does the message contain zero-tolerance language? Answer Y or N."] #TODO this zero tolerance thing
+                reply = "Does the message contain zero-tolerance language? Answer Y or N.\n"
+                reply += "We define zero-tolerance language to consist of slurs and threats."
+                return [reply] 
             if re.search('N',message.content):
                 self.state = State.TRUSTWORTHY
-                return ["Is the user being reported by trustworthy reporters?"]
+                reply = "Is the user being reported by trustworthy reporters? (Y/N)\n"
+                reply += "Trustworthy reporters are users whose percentage of false reports (i.e. reports that did not result in any action after manual review) is under 10%."
+                return [reply]
             return ["Try again."]
         
         if self.state == State.ZERO_TOLERANCE:
             if re.search('Y', message.content):
                 self.state = State.BAN
                 reply = 'The user will be banned, and we will send a message to the reporter that this action has been taken.\n'
-                reply += 'Does the severity of this message warrant escalation?'
+                reply += 'Does the severity of this message warrant escalation? (Y/N)'
                 return [reply] 
             if re.search('N',message.content):
                 self.state = State.ANY_SIGNS
-                return ["Does the message contain any signs of abuse?"]
+                return ["Does the message contain any signs of abuse? (Y/N)"]
             return ["Try again."]
         
         if self.state == State.ANY_SIGNS:
             if re.search('Y', message.content):
                 self.state = State.PROTECTED
-                reply = 'Does the content of the message target protected topics?' #TODO link to protected
+                reply = 'Does the content of the message target protected topics? (Y/N)\n'
+                reply += 'Protected topics include: race, color, religion, sex, age, disability, national origin'
                 return [reply] 
             if re.search('N',message.content):
                 self.state = State.REVIEW_COMPLETE
@@ -112,8 +119,8 @@ class Review:
                 reply += 'Does the severity of this message warrant escalation? (Y/N)'
                 return [reply] 
             if re.search('N',message.content):
-                self.state = State.REVIEW_COMPLETE
-                return ["No action. We may record the reporter for potential adversarial reporting."]
+                self.state = State.ANY_SIGNS
+                return ["Does the message contain any signs of abuse? (Y/N)"]
             return ["Try again."]
         
         if self.state == State.BAN:

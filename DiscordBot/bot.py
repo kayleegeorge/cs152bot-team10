@@ -156,6 +156,8 @@ class ModBot(discord.Client):
         mod_channel = self.mod_channels[message.guild.id]
 
         author_id = message.author.id
+        print('AUTHOR ID: ', author_id)
+        print('AUTHOR NAME: ', message.author.name)
         responses = []
 
         if message.content == 'REPORT_START':
