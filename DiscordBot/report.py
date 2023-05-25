@@ -16,6 +16,7 @@ class State(Enum):
     FREQUENCY = auto()
     COORDINATED_PROMPT = auto()
     FINAL_ACTIONS = auto()
+    COORDINATED_LOOP = auto()
 
 class Report:
     START_KEYWORD = "report"
@@ -150,7 +151,18 @@ class Report:
                 reply += 'Type 1 for delete message, type 2 for block user, type 12 for both, type anything else for no action.'
                 return [reply]
             if re.search('Y', message.content):
-                self.state = State.REPORT_COMPLETE #TODO do this coordinated stuff
+                self.state = State.COORDINATED_LOOP
+                reply = 'Please list the suspected attackers. Delimit usernames using commas, i.e.: \nuser1,user2,user3'
+                return [reply]
+
+        if self.state == State.COORDINATED_LOOP:
+            attackers = message.content.split(',')
+            self.data['coordinated_attackers'] = attackers
+            self.state = State.FINAL_ACTIONS
+            reply = 'Thank you for reporting. Our content moderators will review the message and decide on appropriate action.'
+            reply += ' This may include removal of the post or account. Please select any further action you would like to take.\n'
+            reply += 'Type 1 for delete message, type 2 for block user, type 12 for both, type anything else for no action.'
+            return [reply]
 
         if self.state == State.FINAL_ACTIONS:
             reply = ''
