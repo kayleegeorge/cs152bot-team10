@@ -179,6 +179,16 @@ class ModBot(discord.Client):
         # print('AUTHOR ID: ', author_id)
         # print('AUTHOR NAME: ', author_name)
         responses = []
+        
+        if message.content == 'adversaries':
+            reply = 'Dictionary of adversarial reportings:\n' + str(self.adversary_counts)
+            await mod_channel.send(reply)
+            return
+        
+        if message.content == 'warnings':
+            reply = 'Dictionary of warnings:\n' + str(self.warnings)
+            await mod_channel.send(reply)
+            return
 
         if message.content == 'REPORT_START':
         # If we don't currently have an active report for this user, add one
@@ -199,7 +209,7 @@ class ModBot(discord.Client):
 
         if self.reviews[author_id].adversarial():
             # print('THIS AUTHOR IS ADVERSARIAL: ', author_id)
-            self.adversary_counts[author_id] += 1
+            self.adversary_counts[author_name] += 1
             # print("NEW MAPPY: ", self.adversary_counts)
 
         if self.reviews[author_id].warning():
