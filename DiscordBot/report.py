@@ -150,7 +150,7 @@ class Report:
                 reply += 'Type 1 for delete message, type 2 for block user, type 12 for both, type anything else for no action.'
                 return [reply]
             if re.search('Y', message.content):
-                self.State = State.REPORT_COMPLETE #TODO do this coordinated stuff
+                self.state = State.REPORT_COMPLETE #TODO do this coordinated stuff
 
         if self.state == State.FINAL_ACTIONS:
             reply = ''
