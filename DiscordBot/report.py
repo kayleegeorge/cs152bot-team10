@@ -23,6 +23,7 @@ class Report:
         self.state = State.REPORT_START
         self.client = client
         self.message = None
+        self.abuser = None
     
     async def handle_message(self, message):
         '''
@@ -61,6 +62,7 @@ class Report:
             # Here we've found the message - it's up to you to decide what to do next!
             self.state = State.MESSAGE_IDENTIFIED
             self.data['message'] = message
+            self.abuser = message.author.name
             return ["I found this message:", "```" + message.author.name + ": " + message.content + "```", \
                     "Please select a category of abuse (enter number): \n(1) Spam/Fraud\n (2) General Offensive Content\n (3) Bullying/Harassment\n (4) Imminent Danger"]
         
@@ -136,6 +138,8 @@ class Report:
     def report_complete(self):
         return self.state == State.REPORT_COMPLETE
     
+    def get_abuser(self):
+        return self.abuser
 
 
     

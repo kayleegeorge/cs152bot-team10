@@ -9,6 +9,7 @@ import requests
 from report import Report
 from review import Review
 import pdb
+import collections
 
 # Set up logging to the console
 logger = logging.getLogger('discord')
@@ -36,6 +37,10 @@ class ModBot(discord.Client):
         self.mod_channels = {} # Map from guild to the mod channel id for that guild
         self.reports = {} # Map from user IDs to the state of their report
         self.reviews = {}
+        self.banned = set()
+        self.adversary_counts = collections.defaultdict(int)
+        self.warnings = collections.defaultdict(int)
+
 
 
     async def on_ready(self):
@@ -73,6 +78,7 @@ class ModBot(discord.Client):
         else:
             await self.handle_dm(message)
 
+    # We don't really use handle_dm
     async def handle_dm(self, message):
         # Handle a help message
         if message.content == Report.HELP_KEYWORD:
@@ -101,8 +107,13 @@ class ModBot(discord.Client):
         if self.reports[author_id].report_complete():
             self.reports.pop(author_id)
 
+    #This one is the main one
     async def handle_channel_message(self, message):
 
+        if message.author.name in self.banned:
+            await message.channel.send('Sorry, your account has been banned.')
+            return
+        
         if message.channel.name == f'group-{self.group_num}-mod':
             await self.handle_mod_message(message)
 
@@ -123,10 +134,13 @@ class ModBot(discord.Client):
         # Only respond to messages if they're part of a reporting flow
         if author_id not in self.reports and not message.content.startswith(Report.START_KEYWORD):
             return
-
+        
         # If we don't currently have an active report for this user, add one
         if author_id not in self.reports:
             self.reports[author_id] = Report(self)
+
+        if self.reports[author_id].report_complete():
+            return
 
         # Let the report class handle this message; forward all the messages it returns to uss
         responses = await self.reports[author_id].handle_message(message)
@@ -136,7 +150,7 @@ class ModBot(discord.Client):
 
         # If the report is complete or cancelled, remove it from our map and process it
         if self.reports[author_id].report_complete():
-            report = self.reports.pop(author_id)
+            report = self.reports[author_id]
             # Forward the message to the mod channel
             mod_channel = self.mod_channels[message.guild.id]
             self.reviewing = True
@@ -164,7 +178,7 @@ class ModBot(discord.Client):
         # If we don't currently have an active report for this user, add one
             self.reviews[author_id] = Review(self)
 
-        # Only respond to messages if they're part of a reporting flow
+        # Only respond to messages if they're part of a reviewing flow
         if author_id not in self.reviews:
             return
         # Let the report class handle this message; forward all the messages it returns to uss
@@ -172,8 +186,13 @@ class ModBot(discord.Client):
 
         for r in responses:
             await mod_channel.send(r)
+        if self.reviews[author_id].banned() or self.reviews[author_id].complete_danger():
+            abuser = self.reports[author_id].get_abuser()
+            print('WE SHOULD BAN: ', abuser)
+            self.banned.add(abuser)
 
         if self.reviews[author_id].review_complete():
+            self.reports.pop(author_id)
             review = self.reviews.pop(author_id)
             self.reviewing = False
     

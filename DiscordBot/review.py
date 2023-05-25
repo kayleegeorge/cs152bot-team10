@@ -7,6 +7,7 @@ class State(Enum):
     ABUSE_TYPE = auto()
     MESSAGE_IDENTIFIED = auto()
     REVIEW_COMPLETE = auto()
+    COMPLETE_DANGER = auto()
     PROMPT_OFFENSE = auto()
     PROMPT_IN_GENERAL = auto()
     TRUSTWORTHY = auto()
@@ -44,8 +45,8 @@ class Review:
         
         if self.state == State.ABUSE_TYPE:
             if re.search('2', message.content):
-                self.state = State.REVIEW_COMPLETE
-                return ["This message will be reported to authorities."]
+                self.state = State.COMPLETE_DANGER
+                return ["The user has been banned, and this message will be reported to authorities."]
             if re.search('1', message.content):
                 self.state = State.PROMPT_OFFENSE
                 return ["Is this the first offense against the target? Answer Y or N."]
@@ -137,8 +138,13 @@ class Review:
             return ["Review filed. Thank you for your time."]
 
     def review_complete(self):
-        return self.state == State.REVIEW_COMPLETE
+        return self.state == State.REVIEW_COMPLETE or self.state == State.COMPLETE_DANGER
     
+    def complete_danger(self):
+        return self.state == State.COMPLETE_DANGER
+    
+    def banned(self):
+        return self.state == State.BAN
 
 
     
