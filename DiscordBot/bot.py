@@ -139,7 +139,7 @@ class ModBot(discord.Client):
 
         if self.reports[author_id].report_complete():
             return
-
+        
         # Let the report class handle this message; forward all the messages it returns to uss
         responses = await self.reports[author_id].handle_message(message)
         for r in responses:
@@ -148,7 +148,7 @@ class ModBot(discord.Client):
 
         # If the report is complete or cancelled, remove it from our map and process it
         if self.reports[author_id].report_complete():
-            if self.reports[author_id].cancel_or_separate():
+            if self.reports[author_id].cancelled():
                 self.reports.pop(author_id)
                 return
             report = self.reports[author_id]

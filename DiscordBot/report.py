@@ -12,7 +12,10 @@ class State(Enum):
     OFFENSIVE_CONTENT_TYPE = auto()
     EMERGENCY = auto()
     DANGER = auto()
-    CANCEL_OR_SEPARATE = auto()
+    CANCELLED = auto()
+    FREQUENCY = auto()
+    COORDINATED_PROMPT = auto()
+    FINAL_ACTIONS = auto()
 
 class Report:
     START_KEYWORD = "report"
@@ -34,7 +37,7 @@ class Report:
         get you started and give you a model for working with Discord. 
         '''
         if message.content == self.CANCEL_KEYWORD:
-            self.state = State.CANCEL_OR_SEPARATE
+            self.state = State.CANCELLED
             return ["Report cancelled."]
         
         if self.state == State.REPORT_START:
@@ -76,8 +79,10 @@ class Report:
             if re.search('4', message.content):
                 self.state = State.DANGER
                 return ["Please specify the type of danger: \n(1) Credible threats to safety\n(2) Encouragement of self-harm"]
-            self.state = State.CANCEL_OR_SEPARATE
-            return ["Separate flow."]
+            self.state = State.COORDINATED_PROMPT
+            reply = 'Separate flow.\n'
+            reply += 'Do you suspect this to be part of a coordinated attack? (Y/N)'
+            return [reply]
         
         if self.state == State.DANGER:
             if re.search('1', message.content):
@@ -126,8 +131,42 @@ class Report:
                 self.data['offensiveType'] = 'Violent Content'
             elif re.search('4', message.content):
                 self.data['offensiveType'] = 'Targeted Hate Speech'
+            self.state = State.FREQUENCY
+            return ['Please select the frequency of abuse. \n(1) First time\n(2) Consistent']
+
+        if self.state == State.FREQUENCY:
+            if re.search('1', message.content):
+                self.data['frequency'] = 'First time'
+            if re.search('2', message.content):
+                self.data['frequency'] = 'Consistent'
+            self.state = State.COORDINATED_PROMPT
+            return ['Do you suspect this to be part of a coordinated attack? (Y/N)']
+        
+        if self.state == State.COORDINATED_PROMPT:
+            if re.search('N', message.content):
+                self.state = State.FINAL_ACTIONS
+                reply = 'Thank you for reporting. Our content moderators will review the message and decide on appropriate action.'
+                reply += ' This may include removal of the post or account. Please select any further action you would like to take.\n'
+                reply += 'Type 1 for delete message, type 2 for block user, type 12 for both, type anything else for no action.'
+                return [reply]
+            if re.search('Y', message.content):
+                self.State = State.REPORT_COMPLETE #TODO do this coordinated stuff
+
+        if self.state == State.FINAL_ACTIONS:
+            reply = ''
+            if re.search('1', message.content):
+                self.data['deleteRequested'] = True
+                reply += 'The message will be deleted.\n' 
+            if re.search('2', message.content):
+                self.data['blockRequested'] = True
+                reply += 'The user will be blocked.\n'
+            if len(reply) != 0:
+                reply += 'Report filed. Thank you for your time.'
+                self.state = State.REPORT_COMPLETE
+                return [reply]
             self.state = State.REPORT_COMPLETE
-    
+
+
         if self.state == State.EMERGENCY:
             self.state = State.REPORT_COMPLETE
             if re.search('1', message.content):
@@ -139,10 +178,10 @@ class Report:
             return ["Report filed. Thank you for your time."]
 
     def report_complete(self):
-        return self.state == State.REPORT_COMPLETE or self.state == State.CANCEL_OR_SEPARATE
+        return self.state == State.REPORT_COMPLETE or self.state == State.CANCELLED
     
-    def cancel_or_separate(self):
-        return self.state == State.CANCEL_OR_SEPARATE
+    def cancelled(self):
+        return self.state == State.CANCELLED
 
     def get_abuser(self):
         return self.abuser
