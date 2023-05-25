@@ -39,7 +39,7 @@ class Review:
             reply =  "Thank you for starting the manual review process.\n"
             self.state = State.ABUSE_TYPE
 
-            reply += "Please select a category of abuse (enter number): \n(1) Harassment/Bullying\n \n (2) Imminent Danger\n (3) Other"
+            reply += "Please select a category of abuse (enter number): \n(1) Harassment/Bullying\n(2) Imminent Danger\n(3) Other"
             return [reply]
         
         if self.state == State.ABUSE_TYPE:

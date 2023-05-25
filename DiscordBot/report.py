@@ -11,6 +11,7 @@ class State(Enum):
     HARASS_TYPE = auto()
     OFFENSIVE_CONTENT_TYPE = auto()
     EMERGENCY = auto()
+    DANGER = auto()
 
 class Report:
     START_KEYWORD = "report"
@@ -67,8 +68,23 @@ class Report:
             if re.search('3', message.content):
                 self.state = State.IDENTIFY_TARGET
                 return ["Who was this abuse target at?\n 'Me' or Other? (if other, please specify username)"]
+            if re.search('4', message.content):
+                self.state = State.DANGER
+                return ["Please specify the type of danger: \n(1) Credible threats to safety\n(2) Encouragement of self-harm"]
             self.state = State.REPORT_COMPLETE
             return ["Separate flow."]
+        
+        if self.state == State.DANGER:
+            if re.search('1', message.content):
+                self.data['danger'] = 'Credible threats to safety'
+            if re.search('2', message.content):
+                self.data['danger'] = 'Encouragement of self-harm'
+            self.state = State.EMERGENCY
+            self.data['emergency'] = True
+            reply = "Thank you for reporting. Our content moderators will review the messages and decide on appropriate action. Please reach out to 911 if this is an emergency. Help is available at 988 (Suicide and Crisis Lifeline)."
+            reply += "What further action would you like to pursue? (select all that apply) \n"
+            reply += "(1) Block user \n (2) Report to authorities"
+            return [reply]
 
         if self.state == State.IDENTIFY_TARGET:
             if message.content == 'Me':
