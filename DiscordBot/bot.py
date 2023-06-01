@@ -137,7 +137,8 @@ class ModBot(discord.Client):
             mod_channel = self.mod_channels[message.guild.id]
             scores = self.eval_text(message.content)
             await mod_channel.send(self.code_format(message.content, scores))
-            if scores['toxicity'] > 0.5:
+            if scores['Harassment'] == 'Yes':
+                await mod_channel.send('Calculating bullying vs. banter likelihood...')
                 await mod_channel.send(await self.banter_or_bully(message, 10))
 
             return
@@ -286,6 +287,12 @@ class ModBot(discord.Client):
         for author in avg_aggression:
             avg_aggression[author]['toxicity_avg'] /= avg_aggression[author]['num_msgs']
 
+        # format metrics
+
+        # TODO: add final outcome of whether this is bullying or banter:
+        # - if one user has much higher toxicity score
+        # - if one user has more threats/identity attacks
+        
         return self.format_banter_or_bully(avg_aggression)
     
     def format_banter_or_bully(self, avg_aggression):
