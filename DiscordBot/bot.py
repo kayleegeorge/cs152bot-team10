@@ -137,7 +137,7 @@ class ModBot(discord.Client):
             mod_channel = self.mod_channels[message.guild.id]
             scores = self.eval_text(message.content)
             await mod_channel.send(self.code_format(message.content, scores))
-            if scores['Toxicity Probability'] > 0.5:
+            if scores['toxicity'] > 0.5:
                 await mod_channel.send(await self.banter_or_bully(message, 10))
 
             return
@@ -238,11 +238,11 @@ class ModBot(discord.Client):
         insert your code here! This will primarily be used in Milestone 3. 
         '''
         scores = {}
-        toxicity_prob = get_toxicity_probability(message)['toxicity']
-        if not toxicity_prob:
+        probabilities = get_toxicity_probability(message)
+        if not probabilities:
             return
-        scores['Toxicity Probability'] = toxicity_prob
-        if toxicity_prob > .5:
+        scores = probabilities
+        if probabilities['toxicity'] > .5: # measuring toxicity category
             harassment = detect_harassment(message)
             scores['Harassment'] = harassment
 
@@ -266,21 +266,36 @@ class ModBot(discord.Client):
         
         # avg toxicity score across messages
         avg_aggression = {}
-        num_msgs = {}
         for message in messages:
-            if message.author.name in num_msgs:
-                num_msgs[message.author.name] += 1
-                avg_aggression[message.author.name] += self.eval_text(message.content)['Toxicity Probability']
-            else:
-                num_msgs[message.author.name] = 1
-                avg_aggression[message.author.name] = self.eval_text(message.content)['Toxicity Probability']
-        for author in num_msgs:
-            avg_aggression[message.author.name] /= num_msgs[author]
-        # averages
-        # reply = f"last {num_last_messages} average aggression messages: "
-        # for message in messages:
-        #     reply += message.content + " "
-        return f"Average toxicity scores over the past {num_last_messages} messages: " + str(avg_aggression)
+            perspective_scores = self.eval_text(message.content)
+            author = message.author.name # alias of user who sent msg
 
+            if author not in avg_aggression:
+                avg_aggression[author] = { 'num_msgs': 0, 'toxicity_avg': 0, 'num_identity_attack': 0, 'num_threat': 0 }
+            
+            avg_aggression[author]['num_msgs'] += 1 # track num messages
+            avg_aggression[author]['toxicity_avg'] += perspective_scores['toxicity'] # track toxicity
+
+            # track 'more severe' message categories: threat or identity attack
+            if perspective_scores['identity_attack'] > 0.5:
+                avg_aggression[author]['num_identity_attack'] += 1
+            if perspective_scores['threat'] > 0.5:
+                avg_aggression[author]['num_threat'] += 1 
+
+        # average scores across messages
+        for author in avg_aggression:
+            avg_aggression[author]['toxicity_avg'] /= avg_aggression[author]['num_msgs']
+
+        return self.format_banter_or_bully(avg_aggression)
+    
+    def format_banter_or_bully(self, avg_aggression):
+        reply = ""
+        for author in avg_aggression:
+            toxicity_avg = avg_aggression[author]['toxicity_avg']
+            num_msgs = avg_aggression[author]['num_msgs']
+            severe_msgs = avg_aggression[author]['num_identity_attack'] + avg_aggression[author]['num_threat'] 
+            reply += f'User {author} had an average toxicity score of {toxicity_avg} and {severe_msgs} threats/identity attacks over the last {num_msgs} messages \n'
+        return reply
+    
 client = ModBot()
 client.run(discord_token)
