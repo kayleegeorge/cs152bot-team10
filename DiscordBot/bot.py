@@ -10,6 +10,8 @@ from report import Report
 from review import Review
 import pdb
 import collections
+from openaiapi import *
+from perspective import *
 
 # Set up logging to the console
 logger = logging.getLogger('discord')
@@ -129,9 +131,15 @@ class ModBot(discord.Client):
         author_id = message.author.id
         responses = []
 
-        # Only respond to messages if they're part of a reporting flow
-        if author_id not in self.reports and not message.content.startswith(Report.START_KEYWORD):
+       
+        if author_id not in self.reports and not message.content.startswith(Report.START_KEYWORD): 
+             # If not an active reporting flow, evaluate the message and send score to mod channel
+            mod_channel = self.mod_channels[message.guild.id]
+            scores = self.eval_text(message.content)
+            await mod_channel.send(self.code_format(message.content, scores))
             return
+
+        # Only respond to messages if they're part of a reporting flow
         
         # If we don't currently have an active report for this user, add one
         if author_id not in self.reports:
@@ -226,16 +234,27 @@ class ModBot(discord.Client):
         TODO: Once you know how you want to evaluate messages in your channel, 
         insert your code here! This will primarily be used in Milestone 3. 
         '''
-        return message
+        scores = {}
+        toxicity_prob = get_toxicity_probability(message)
+        if not toxicity_prob:
+            return
+        scores['Toxicity Probability'] = toxicity_prob
+        if toxicity_prob > .5:
+            harassment = detect_harassment(message)
+            scores['Harassment'] = harassment
+
+        return scores
 
     
-    def code_format(self, text):
+    def code_format(self, message, scores):
         ''''
         TODO: Once you know how you want to show that a message has been 
         evaluated, insert your code here for formatting the string to be 
         shown in the mod channel. 
         '''
-        return "Evaluated: '" + text+ "'"
+        reply = "Evaluated: '" + message + "'\n"
+        reply += "Scores: " + str(scores)
+        return reply
 
 
 client = ModBot()

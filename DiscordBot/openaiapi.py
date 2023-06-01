@@ -12,12 +12,15 @@ import sys # for testing
 
 # There should be a file called 'tokens.json' inside the same folder as this file
 def detect_harassment(toxic_message):
+
     token_path = 'tokens.json'
     if not os.path.isfile(token_path):
         raise Exception(f"{token_path} not found!")
     with open(token_path) as f:
         # If you get an error here, it means your token is formatted incorrectly. Did you put it in quotes?
         tokens = json.load(f)
+        if not tokens['openai']:
+            return None
         openai.organization = tokens['openai']['org']
         openai.api_key = tokens['openai']['key']
         
@@ -35,9 +38,9 @@ def detect_harassment(toxic_message):
     output = response['choices'][0]['message']['content']
     return output
 # print(response)
-s = ''
-for arg in sys.argv[1:]:
-    s += arg
-    s += ' '
+# s = ''
+# for arg in sys.argv[1:]:
+#     s += arg
+#     s += ' '
 
-print(detect_harassment(s))
+# print(detect_harassment(s))
