@@ -139,9 +139,10 @@ class ModBot(discord.Client):
             await mod_channel.send(self.code_format(message.content, scores))
 
             # calculate bullying vs. banter
-            calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
-            await mod_channel.send(await self.banter_or_bully(message, 10))
-            await calculating_msg.edit(content="Bullying vs. banter report completed!")
+            if scores['toxicity'] > 0.5:
+                calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
+                await mod_channel.send(await self.banter_or_bully(message, 10))
+                await calculating_msg.edit(content="Bullying vs. banter report completed!")
             return
 
         # Only respond to messages if they're part of a reporting flow
