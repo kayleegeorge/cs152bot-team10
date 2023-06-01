@@ -137,6 +137,9 @@ class ModBot(discord.Client):
             mod_channel = self.mod_channels[message.guild.id]
             scores = self.eval_text(message.content)
             await mod_channel.send(self.code_format(message.content, scores))
+            if scores['Toxicity Probability'] > 0.5:
+                await mod_channel.send(await self.banter_or_bully(message, 10))
+
             return
 
         # Only respond to messages if they're part of a reporting flow
@@ -235,7 +238,7 @@ class ModBot(discord.Client):
         insert your code here! This will primarily be used in Milestone 3. 
         '''
         scores = {}
-        toxicity_prob = get_toxicity_probability(message)
+        toxicity_prob = get_toxicity_probability(message)['toxicity']
         if not toxicity_prob:
             return
         scores['Toxicity Probability'] = toxicity_prob
@@ -256,6 +259,28 @@ class ModBot(discord.Client):
         reply += "Scores: " + str(scores)
         return reply
 
+    async def banter_or_bully(self, message, num_last_messages):
+        # get last n messages
+        messages = [message async for message in message.channel.history(limit=num_last_messages)]
+        messages.reverse()
+        
+        # avg toxicity score across messages
+        avg_aggression = {}
+        num_msgs = {}
+        for message in messages:
+            if message.author.name in num_msgs:
+                num_msgs[message.author.name] += 1
+                avg_aggression[message.author.name] += self.eval_text(message.content)['Toxicity Probability']
+            else:
+                num_msgs[message.author.name] = 1
+                avg_aggression[message.author.name] = self.eval_text(message.content)['Toxicity Probability']
+        for author in num_msgs:
+            avg_aggression[message.author.name] /= num_msgs[author]
+        # averages
+        # reply = f"last {num_last_messages} average aggression messages: "
+        # for message in messages:
+        #     reply += message.content + " "
+        return f"Average toxicity scores over the past {num_last_messages} messages: " + str(avg_aggression)
 
 client = ModBot()
 client.run(discord_token)

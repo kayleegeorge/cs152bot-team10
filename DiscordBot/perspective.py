@@ -27,13 +27,18 @@ def get_toxicity_probability(message):
 
     analyze_request = {
     'comment': { 'text': message},
-    'requestedAttributes': {'TOXICITY': {}}
+    'requestedAttributes': {'TOXICITY': {}, 'SEVERE_TOXICITY': {}, 'IDENTITY_ATTACK': {}, 'INSULT': {}, 'PROFANITY':{}, 'THREAT': {} }
     }
 
     response = client.comments().analyze(body=analyze_request).execute()
     # print(json.dumps(response, indent=2))
     # print(response['attributeScores']['TOXICITY']['spanScores'][0]['score']['value'])
-    return response['attributeScores']['TOXICITY']['spanScores'][0]['score']['value'] # toxicity probability
+    return { "toxicity": response['attributeScores']['TOXICITY']['spanScores'][0]['score']['value'], # toxicity probability
+             "severe_toxicity": response['attributeScores']['SEVERE_TOXICITY']['spanScores'][0]['score']['value'],
+             "identity_attack": response['attributeScores']['IDENTITY_ATTACK']['spanScores'][0]['score']['value'],
+             "insult": response['attributeScores']['INSULT']['spanScores'][0]['score']['value'],
+             "profanity": response['attributeScores']['PROFANITY']['spanScores'][0]['score']['value'],
+             "threat": response['attributeScores']['THREAT']['spanScores'][0]['score']['value'] }
 
 # s = ''
 # for arg in sys.argv[1:]:
