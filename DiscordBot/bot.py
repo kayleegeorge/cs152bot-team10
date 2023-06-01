@@ -137,10 +137,11 @@ class ModBot(discord.Client):
             mod_channel = self.mod_channels[message.guild.id]
             scores = self.eval_text(message.content)
             await mod_channel.send(self.code_format(message.content, scores))
-            if scores['Harassment'] == 'Yes':
-                await mod_channel.send('Calculating bullying vs. banter likelihood...')
-                await mod_channel.send(await self.banter_or_bully(message, 10))
 
+            # calculate bullying vs. banter
+            calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
+            await mod_channel.send(await self.banter_or_bully(message, 10))
+            await calculating_msg.edit(content="Bullying vs. banter report completed!")
             return
 
         # Only respond to messages if they're part of a reporting flow
