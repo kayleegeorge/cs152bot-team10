@@ -322,6 +322,26 @@ class ModBot(discord.Client):
         # return
         # print(messages)
         return
+    
+    def evaluate_perf(dataset):
+        #confusion matrix values
+        tp, tn, fp, fn = 0, 0, 0, 0
+
+        for message in dataset:
+            pred = banter_or_bully(self, message, 10)
+            label = message.label
+            if pred == label and pred == 'bully':
+                tp += 1
+            elif pred == label and pred == 'banter':
+                tn += 1
+            elif pred != label and pred == 'banter':
+                fn += 1
+            else:
+                fp += 1
+        
+        return tp, tn, fp, fn
+
+
 
 client = ModBot()
 client.run(discord_token)
