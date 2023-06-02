@@ -266,7 +266,6 @@ class ModBot(discord.Client):
         # get last n messages
         messages = [message async for message in message.channel.history(limit=num_last_messages)]
         messages.reverse()
-        print(message.channel.history(limit=num_last_messages))
         
         # avg toxicity score across messages
         avg_aggression = {}
