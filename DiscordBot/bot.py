@@ -138,9 +138,14 @@ class ModBot(discord.Client):
             scores = self.eval_text(message.content)
             await mod_channel.send(self.code_format(message.content, scores))
 
+            #Maia
+            messages1 = [message async for message in message.channel.history(limit=1, oldest_first=True)]
+
             # calculate bullying vs. banter
             if scores['toxicity'] > 0.5:
                 calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
+                #Maia
+                await mod_channel.send(messages1)
                 await mod_channel.send(await self.banter_or_bully(message, 10))
                 await calculating_msg.edit(content="Bullying vs. banter report completed!")
             return
@@ -266,7 +271,7 @@ class ModBot(discord.Client):
         # get last n messages
         messages = [message async for message in message.channel.history(limit=num_last_messages)]
         messages.reverse()
-        print(message.channel.history(limit=num_last_messages))
+        # print(message.channel.history(limit=num_last_messages))
         
         # avg toxicity score across messages
         avg_aggression = {}
@@ -307,5 +312,9 @@ class ModBot(discord.Client):
             reply += f'User {author} had an average toxicity score of {toxicity_avg} and {severe_msgs} threats/identity attacks over the last {num_msgs} messages \n'
         return reply
     
+    async def get_time_elapsed_from_first(self, message):
+        messages = [message async for message in message.channel.history(limit=1, oldest_first=True)]
+        print(messages)
+
 client = ModBot()
 client.run(discord_token)
