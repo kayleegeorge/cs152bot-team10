@@ -145,7 +145,7 @@ class ModBot(discord.Client):
             if scores['toxicity'] > 0.5:
                 calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
                 #Maia
-                await mod_channel.send(messages1)
+                await mod_channel.send(messages1.name)
                 await mod_channel.send(await self.banter_or_bully(message, 10))
                 await calculating_msg.edit(content="Bullying vs. banter report completed!")
             return
