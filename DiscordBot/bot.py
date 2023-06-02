@@ -138,14 +138,14 @@ class ModBot(discord.Client):
             scores = self.eval_text(message.content)
             await mod_channel.send(self.code_format(message.content, scores))
 
-            #Maia
-            messages1 = [message async for message in message.channel.history(limit=1, oldest_first=True)]
+            # #Maia
+            # messages1 = [message async for message in message.channel.history(limit=1, oldest_first=True)]
 
             # calculate bullying vs. banter
             if scores['toxicity'] > 0.5:
                 calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
                 #Maia
-                await mod_channel.send(messages1.author.name)
+                # await mod_channel.send(await get_time_elapsed_from_first(message))
                 await mod_channel.send(await self.banter_or_bully(message, 10))
                 await calculating_msg.edit(content="Bullying vs. banter report completed!")
             return
@@ -314,7 +314,14 @@ class ModBot(discord.Client):
     
     async def get_time_elapsed_from_first(self, message):
         messages = [message async for message in message.channel.history(limit=1, oldest_first=True)]
-        print(messages)
+        author = ''
+        for message in messages:
+            # perspective_scores = self.eval_text(message.content)
+            author = message.author.name # alias of user who sent msg
+            return author
+        # return
+        # print(messages)
+        return
 
 client = ModBot()
 client.run(discord_token)
