@@ -135,7 +135,7 @@ class ModBot(discord.Client):
         if author_id not in self.reports and not message.content.startswith(Report.START_KEYWORD): 
              # If not an active reporting flow, evaluate the message and send score to mod channel
             mod_channel = self.mod_channels[message.guild.id]
-            scores = self.eval_text(message.content)
+            scores = self.eval_text(message.content.lower())
             await mod_channel.send(self.code_format(message.content, scores))
 
             # #Maia
@@ -276,7 +276,7 @@ class ModBot(discord.Client):
         # avg toxicity score across messages
         avg_aggression = {}
         for message in messages:
-            perspective_scores = self.eval_text(message.content)
+            perspective_scores = self.eval_text(message.content.lower())
             author = message.author.name # alias of user who sent msg
 
             if author not in avg_aggression:
