@@ -8,7 +8,7 @@ import openai
 import json
 import sys # for testing
 
-# print(openai.Model.list()) # Can used to verify GPT-4 accessß
+# print(openai.Model.list()) # Can used to verify GPT-4 access
 
 # There should be a file called 'tokens.json' inside the same folder as this file
 def detect_harassment(toxic_message):

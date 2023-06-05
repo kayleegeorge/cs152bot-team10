@@ -310,7 +310,23 @@ class ModBot(discord.Client):
             num_msgs = avg_aggression[author]['num_msgs']
             severe_msgs = avg_aggression[author]['num_identity_attack'] + avg_aggression[author]['num_threat'] 
             reply += f'User {author} had an average toxicity score of {toxicity_avg} and {severe_msgs} threats/identity attacks over the last {num_msgs} messages \n'
+        reply += self.final_decision(avg_aggression)
         return reply
+
+    def final_decision(self, avg_agression): # supports 1 on 1 conversation
+        decision = ""
+        new_dict = {}
+        for key in avg_agression:
+            val = avg_agression[key]['toxicity_avg']
+            new_dict[key] = val
+        highest = max(new_dict, key = new_dict.get)
+        author = list(new_dict.keys())[0]
+        diff = abs(new_dict[author] - new_dict[highest])
+        if diff < 0.20:
+            decision += f"This conversation is likely Banter!"
+        else:
+            decision += f"This conversation is likely Bullying!"
+        return decision
     
     async def get_time_elapsed_from_first(self, message):
         messages = [message async for message in message.channel.history(limit=1, oldest_first=True)]
