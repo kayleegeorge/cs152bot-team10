@@ -319,9 +319,9 @@ class ModBot(discord.Client):
         for key in avg_agression:
             val = avg_agression[key]['toxicity_avg']
             new_dict[key] = val
-        highest = max(new_dict, key = new_dict.get)
-        author = list(new_dict.keys())[0]
-        diff = abs(new_dict[author] - new_dict[highest])
+        author1 = list(new_dict.keys())[0]
+        author2 = list(new_dict.keys())[1]
+        diff = abs(new_dict[author1] - new_dict[author2])
         if diff < 0.20:
             decision += f"This conversation is likely Banter!"
         else:
@@ -344,13 +344,13 @@ class ModBot(discord.Client):
         tp, tn, fp, fn = 0, 0, 0, 0
 
         for message in dataset:
-            pred = banter_or_bully(self, message, 10)
+            pred = banter_or_bully(message, 10)
             label = message.label
-            if pred == label and pred == 'bully':
+            if pred == label and pred == "This conversation is likely Bullying!":
                 tp += 1
-            elif pred == label and pred == 'banter':
+            elif pred == label and pred == "This conversation is likely Banter!":
                 tn += 1
-            elif pred != label and pred == 'banter':
+            elif pred != label and pred == "This conversation is likely Banter!":
                 fn += 1
             else:
                 fp += 1
