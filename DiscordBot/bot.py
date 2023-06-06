@@ -142,7 +142,7 @@ class ModBot(discord.Client):
             # messages1 = [message async for message in message.channel.history(limit=1, oldest_first=True)]
 
             # calculate bullying vs. banter
-            if scores['toxicity'] > 0.5:
+            if scores['toxicity'] > 0.6:
                 calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
                 #Maia
                 # await mod_channel.send(await get_time_elapsed_from_first(message))
