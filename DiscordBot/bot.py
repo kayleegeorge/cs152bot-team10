@@ -136,16 +136,13 @@ class ModBot(discord.Client):
              # If not an active reporting flow, evaluate the message and send score to mod channel
             mod_channel = self.mod_channels[message.guild.id]
             scores = self.eval_text(message.content.lower())
-            await mod_channel.send(self.code_format(message.content, scores))
-
-            # #Maia
-            # messages1 = [message async for message in message.channel.history(limit=1, oldest_first=True)]
+            # await mod_channel.send(self.code_format(message.content, scores))
 
             # calculate bullying vs. banter
             if scores['toxicity'] > 0.6:
+                #Evaluating with scores - show up only when toxicity is concerning
+                await mod_channel.send(self.code_format(message.content, scores))
                 calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
-                #Maia
-                # await mod_channel.send(await get_time_elapsed_from_first(message))
                 await mod_channel.send(await self.banter_or_bully(message, 10))
                 await calculating_msg.edit(content="Bullying vs. banter report completed!")
             return
@@ -271,7 +268,6 @@ class ModBot(discord.Client):
         # get last n messages
         messages = [message async for message in message.channel.history(limit=num_last_messages)]
         messages.reverse()
-        # print(message.channel.history(limit=num_last_messages))
         
         # avg toxicity score across messages
         avg_aggression = {}
@@ -327,17 +323,6 @@ class ModBot(discord.Client):
         else:
             decision += f"This conversation is likely Bullying!"
         return decision
-    
-    async def get_time_elapsed_from_first(self, message):
-        messages = [message async for message in message.channel.history(limit=1, oldest_first=True)]
-        author = ''
-        for message in messages:
-            # perspective_scores = self.eval_text(message.content)
-            author = message.author.name # alias of user who sent msg
-            return author
-        # return
-        # print(messages)
-        return
     
     def evaluate_perf(dataset):
         #confusion matrix values
