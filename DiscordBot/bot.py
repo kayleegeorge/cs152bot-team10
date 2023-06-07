@@ -72,9 +72,9 @@ class ModBot(discord.Client):
         if message.author.id == self.user.id:
             return
         
-        # FOR TESTING PURPOSES DELETE LATER
-        if message.content[0] != '!':
-            return
+        # # FOR TESTING PURPOSES DELETE LATER
+        # if message.content[0] != '!':
+        #     return
 
         # Check if this message was sent in a server ("guild") or if it's a DM
         if message.guild:
@@ -140,10 +140,9 @@ class ModBot(discord.Client):
              # If not an active reporting flow, evaluate the message and send score to mod channel
             mod_channel = self.mod_channels[message.guild.id]
             scores = self.eval_text(message.content.lower())
-            # await mod_channel.send(self.code_format(message.content, scores))
 
             # calculate bullying vs. banter
-            if scores['toxicity'] > 0.6:
+            if scores and scores['toxicity'] > 0.6:
                 #Evaluating with scores - show up only when toxicity is concerning
                 await mod_channel.send(self.code_format(message.content, scores))
                 calculating_msg = await mod_channel.send('Calculating bullying vs. banter likelihood...')
@@ -251,9 +250,9 @@ class ModBot(discord.Client):
         if not probabilities:
             return
         scores = probabilities
-        if probabilities['toxicity'] > .5: # measuring toxicity category
-            harassment = detect_harassment(message)
-            scores['Harassment'] = harassment
+        #if probabilities['toxicity'] > .5: # measuring toxicity category
+        harassment = detect_harassment(message)
+        scores['Harassment'] = harassment
 
         return scores
 
@@ -278,7 +277,9 @@ class ModBot(discord.Client):
         for message in messages:
             perspective_scores = self.eval_text(message.content.lower())
             author = message.author.name # alias of user who sent msg
-
+            if not perspective_scores:
+                return 'Perspective API error: could not be determined'
+            
             if author not in avg_aggression:
                 avg_aggression[author] = { 'num_msgs': 0, 'toxicity_avg': 0, 'num_identity_attack': 0, 'num_threat': 0 }
             
