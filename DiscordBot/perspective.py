@@ -29,10 +29,16 @@ def get_toxicity_probability(message):
     'comment': { 'text': message},
     'requestedAttributes': {'TOXICITY': {}, 'SEVERE_TOXICITY': {}, 'IDENTITY_ATTACK': {}, 'INSULT': {}, 'PROFANITY':{}, 'THREAT': {} }
     }
-
-    response = client.comments().analyze(body=analyze_request).execute()
+    try:
+        response = client.comments().analyze(body=analyze_request).execute()
+    except:
+        return 0
+    
+    
     # print(json.dumps(response, indent=2))
-    # print(response['attributeScores']['TOXICITY']['spanScores'][0]['score']['value'])
+    # print(response['attributeScores']['TOXICITY']['spanScores'][0]['score']['value']
+    # )
+    
     return { "toxicity": response['attributeScores']['TOXICITY']['spanScores'][0]['score']['value'], # toxicity probability
              "severe_toxicity": response['attributeScores']['SEVERE_TOXICITY']['spanScores'][0]['score']['value'],
              "identity_attack": response['attributeScores']['IDENTITY_ATTACK']['spanScores'][0]['score']['value'],

@@ -71,6 +71,10 @@ class ModBot(discord.Client):
         # Ignore messages from the bot 
         if message.author.id == self.user.id:
             return
+        
+        # FOR TESTING PURPOSES DELETE LATER
+        if message.content[0] != '!':
+            return
 
         # Check if this message was sent in a server ("guild") or if it's a DM
         if message.guild:
@@ -318,29 +322,30 @@ class ModBot(discord.Client):
         author1 = list(new_dict.keys())[0]
         author2 = list(new_dict.keys())[1]
         diff = abs(new_dict[author1] - new_dict[author2])
-        if diff < 0.20:
+        if diff < 0.25:
             decision += f"This conversation is likely Banter!"
         else:
             decision += f"This conversation is likely Bullying!"
         return decision
     
-    def evaluate_perf(dataset):
-        #confusion matrix values
-        tp, tn, fp, fn = 0, 0, 0, 0
+    # don't need because manual
+    # def evaluate_perf(dataset):
+    #     #confusion matrix values
+    #     tp, tn, fp, fn = 0, 0, 0, 0
 
-        for message in dataset:
-            pred = banter_or_bully(message, 10)
-            label = message.label
-            if pred == label and pred == "This conversation is likely Bullying!":
-                tp += 1
-            elif pred == label and pred == "This conversation is likely Banter!":
-                tn += 1
-            elif pred != label and pred == "This conversation is likely Banter!":
-                fn += 1
-            else:
-                fp += 1
+    #     for message in dataset:
+    #         pred = banter_or_bully(message, 10)
+    #         label = message.label
+    #         if pred == label and pred == "This conversation is likely Bullying!":
+    #             tp += 1
+    #         elif pred == label and pred == "This conversation is likely Banter!":
+    #             tn += 1
+    #         elif pred != label and pred == "This conversation is likely Banter!":
+    #             fn += 1
+    #         else:
+    #             fp += 1
         
-        return tp, tn, fp, fn
+    #     return tp, tn, fp, fn
 
 
 
